@@ -1,0 +1,9 @@
+*** attempting to build a docker container for haskell development with a copy of the devshell inside
+
+Try it with:
+
+```sh
+git clone https://github.com/ParetoOptimalDev/hello-haskell.nix-devcontainer/tree/nix-mk-shell-bin
+cd nix-mk-shell-bin
+nix build .#devContainerImage && docker load < result && docker run -v $PWD:/workspace/hello --rm -it hello-nix-devcontainer bash -c "ghc-pkg list | grep aeson"
+```
