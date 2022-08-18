@@ -24,6 +24,7 @@
       pkgs = import nixpkgs { inherit system overlays; inherit (haskellNix) config; };
       flake = pkgs.helloProject.flake {};
     in flake // {
+      helloProj = pkgs.helloProject;
       defaultPackage = flake.packages."hello:exe:hello";
       packages.devContainerImage = pkgs.dockerTools.buildLayeredImage {
         name = "hello-nix-devcontainer";
