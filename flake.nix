@@ -24,7 +24,7 @@
     pkgShellBin = mkShellBin { drv = pkg; nixpkgs = np; };
 
     # Here, `shellBin` *will* build `pkg`. This is like `nix develop`.
-    shell = np.mkShell { name = "example"; nativeBuildInputs = [pkg]; };
+    shell = np.mkShell { name = "example"; buildInputs = [pkg]; nativeBuildInputs = [pkg]; };
     shellBin = msb.lib.mkShellBin { drv = shell; nixpkgs = np; bashPrompt = "[hithere]$ "; };
 
   in {
@@ -36,9 +36,9 @@
     packages.devContainerImage = np.dockerTools.buildLayeredImage {
         name = "hello-nix-devcontainer";
         tag = "latest";
-        # extraCommands = ''
-        #   #!${np.runtimeShell}
-        # '';
+        extraCommands = ''
+          #!${pkgShellBin}/bin/example-shell
+        '';
         contents = with np; [
           bash coreutils cacert tzdata fd git  busybox
           shellBin
