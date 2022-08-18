@@ -41,3 +41,7 @@
     });
 }
 # nix build .#devContainerImage && docker load < result && docker run -v $PWD:/workspace/hello --rm -it hello-nix-devcontainer bash
+
+
+# What I want basically
+# pkgs.dockerTools.buildLayeredImage { contents = [ myFlakesDevshell ]; }
