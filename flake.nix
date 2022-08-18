@@ -34,8 +34,9 @@
         '';
         contents = with pkgs; [
           bash coreutils cacert tzdata fd git  busybox
-          ((pkgs.helloProject.shellFor {}).buildInputs)
-          (pkgs.helloProject.ghcWithPackages(pkgs: [pkgs.cabal-install]))
+          ((pkgs.helloProject.shellFor { }).buildInputs)
+          ((pkgs.helloProject.shellFor { }).nativeBuildInputs)
+          # (helloProject.ghcWithPackages(pkgs: [cabal-install helloProject.hsPkgs]))
         ];
       };
     });
