@@ -12,10 +12,11 @@
             final.haskell-nix.project' {
               src = ./.;
               compiler-nix-name = "ghc902";
+              index-state = "2022-08-18T00:00:00Z";
               shell.tools = {
                 cabal = {};
-                hlint = {};
-                haskell-language-server = {};
+                # hlint = {};
+                # haskell-language-server = {};
               };
             };
         })
@@ -25,7 +26,7 @@
     in flake // {
       defaultPackage = flake.packages."hello:exe:hello";
       packages.devContainerImage = pkgs.dockerTools.buildLayeredImage {
-        name = "hello-devcontainer";
+        name = "hello-nix-devcontainer";
         tag = "latest";
         extraCommands = ''
           #!${pkgs.runtimeShell}
@@ -33,6 +34,7 @@
         contents = with pkgs; [
           bash coreutils cacert tzdata fd git  busybox
           ((pkgs.helloProject.shellFor {}).buildInputs)
+          (pkgs.helloProject.ghcWithPackages(pkgs: [pkgs.cabal-install]))
         ];
       };
     });
