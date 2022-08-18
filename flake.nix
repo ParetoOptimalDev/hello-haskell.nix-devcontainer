@@ -1,48 +1,46 @@
+# SPDX-FileCopyrightText: 2021 Serokell <https://serokell.io/>
+#
+# SPDX-License-Identifier: CC0-1.0
+
 {
-  description = "A very basic flake";
-  inputs.haskellNix.url = "github:input-output-hk/haskell.nix";
-  inputs.nixpkgs.follows = "haskellNix/nixpkgs-unstable";
-  inputs.flake-utils.url = "github:numtide/flake-utils";
-  outputs = { self, nixpkgs, flake-utils, haskellNix }:
-    flake-utils.lib.eachSystem [ "x86_64-linux" ] (system:
-    let
-      overlays = [ haskellNix.overlay
-        (final: prev: {
-          helloProject =
-            final.haskell-nix.project' {
-              src = ./.;
-              compiler-nix-name = "ghc902";
-              index-state = "2022-08-18T00:00:00Z";
-              shell.tools = {
-                cabal = {};
-                # hlint = {};
-                # haskell-language-server = {};
-              };
-            };
-        })
-      ];
-      pkgs = import nixpkgs { inherit system overlays; inherit (haskellNix) config; };
-      flake = pkgs.helloProject.flake {};
-    in flake // {
-      helloProj = pkgs.helloProject;
-      defaultPackage = flake.packages."hello:exe:hello";
-      packages.devContainerImage = pkgs.dockerTools.buildLayeredImage {
-        name = "hello-nix-devcontainer";
-        tag = "latest";
-        extraCommands = ''
-          #!${pkgs.runtimeShell}
-        '';
-        contents = with pkgs; [
-          bash coreutils cacert tzdata fd git  busybox
-          ((pkgs.helloProject.shellFor { }).buildInputs)
-          ((pkgs.helloProject.shellFor { }).nativeBuildInputs)
-          # (helloProject.ghcWithPackages(pkgs: [cabal-install helloProject.hsPkgs]))
-        ];
-      };
-    });
+  description = "My haskell application";
+
+  inputs = {
+    nixpkgs.url = "github:NixOS/nixpkgs";
+    flake-utils.url = "github:numtide/flake-utils";
+  };
+
+  outputs = { self, nixpkgs, flake-utils }:
+    flake-utils.lib.eachDefaultSystem (system:
+      let
+        pkgs = nixpkgs.legacyPackages.${system};
+
+        haskellPackages = pkgs.haskellPackages;
+
+        jailbreakUnbreak = pkg:
+          pkgs.haskell.lib.doJailbreak (pkg.overrideAttrs (_: { meta = { }; }));
+
+        packageName = "hello";
+      in {
+        packages.${packageName} =
+          haskellPackages.callCabal2nix packageName self rec {
+            # Dependency overrides go here
+          };
+
+        defaultPackage = self.packages.${system}.${packageName};
+
+        devShell = pkgs.mkShell {
+          shellHook = "runHook setupCompilerEnvironmentPhase";
+          buildInputs = with pkgs; [
+            cabal-install
+
+            # this isn't enough to get `aeson` in the environment
+            # maybe if we somehow say to also run
+            # packages.x86_64-linux.hello.setupCompilerEnvironmentPhase
+            # then things will work
+            self.packages.${system}.${packageName}
+          ];
+          inputsFrom = builtins.attrValues self.packages.${system};
+        };
+      });
 }
-# nix build .#devContainerImage && docker load < result && docker run -v $PWD:/workspace/hello --rm -it hello-nix-devcontainer bash
-
-
-# What I want basically
-# pkgs.dockerTools.buildLayeredImage { contents = [ myFlakesDevshell ]; }
