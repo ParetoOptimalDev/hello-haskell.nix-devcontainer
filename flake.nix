@@ -30,15 +30,8 @@
         defaultPackage = self.packages.${system}.${packageName};
 
         devShell = pkgs.mkShell {
-          shellHook = "runHook setupCompilerEnvironmentPhase";
           buildInputs = with pkgs; [
-            cabal-install
 
-            # this isn't enough to get `aeson` in the environment
-            # maybe if we somehow say to also run
-            # packages.x86_64-linux.hello.setupCompilerEnvironmentPhase
-            # then things will work
-            self.packages.${system}.${packageName}
           ];
           inputsFrom = builtins.attrValues self.packages.${system};
         };
